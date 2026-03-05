@@ -1,0 +1,127 @@
+# ============================================================================
+# MALAR INVENTORY MANAGEMENT SYSTEM - PYTHON DEPENDENCIES
+# ============================================================================
+# 
+# This file contains all Python packages required to run the Malar Inventory
+# Management System. Install dependencies using:
+#   pip install -r requirements.txt
+#
+# ============================================================================
+
+# ============================================================================
+# CORE FRAMEWORK
+# ============================================================================
+
+# Django - Web Framework
+# Version: 3.2.23 (LTS - Long Term Support)
+# Purpose: Core web framework for building the application
+# Docs: https://docs.djangoproject.com/en/3.2/
+Django==3.2.23
+
+
+# ============================================================================
+# DATABASE & ORM
+# ============================================================================
+
+# Djongo - MongoDB Connector for Django
+# Version: 1.3.6
+# Purpose: Allows Django ORM to work seamlessly with MongoDB
+# Docs: https://www.djongomapper.com/
+djongo==1.3.6
+
+# PyMongo - MongoDB Python Driver
+# Version: 3.12.3
+# Purpose: Low-level MongoDB driver (required by Djongo)
+# Docs: https://pymongo.readthedocs.io/
+pymongo==3.12.3
+
+
+# ============================================================================
+# FRONTEND & FORMS
+# ============================================================================
+
+# Django Crispy Forms - Advanced Form Rendering
+# Version: 1.14.0
+# Purpose: Makes Django forms render with Bootstrap styling
+# Features: Auto-generates Bootstrap HTML, form layouts, validation
+# Docs: https://django-crispy-forms.readthedocs.io/
+django-crispy-forms==1.14.0
+
+# Crispy Bootstrap5 - Bootstrap 5 Template Pack
+# Version: 0.7
+# Purpose: Crispy Forms integration with Bootstrap 5 CSS framework
+# Features: Modern responsive design, mobile-friendly forms
+# Docs: https://github.com/django-crispy-forms/crispy-bootstrap5
+crispy-bootstrap5==0.7
+
+
+# ============================================================================
+# FILE HANDLING & MEDIA
+# ============================================================================
+
+# Pillow - Python Imaging Library
+# Version: 10.2.0
+# Purpose: Image processing for product image uploads
+# Features: Image validation, resizing, optimization
+# Docs: https://pillow.readthedocs.io/
+Pillow==10.2.0
+
+
+# ============================================================================
+# ASYNCHRONOUS & TYPE HANDLING
+# ============================================================================
+
+# ASGI Server Implementation
+# Version: 3.7.1
+# Purpose: Async Server Gateway Interface - enables async/await in Django
+# Docs: https://asgi.readthedocs.io/
+asgiref==3.7.1
+
+# Typing Extensions - Backported Type Hints
+# Version: 4.9.0
+# Purpose: Advanced Python type hints compatibility
+# Docs: https://github.com/python/typing_extensions
+typing-extensions==4.9.0
+
+
+# ============================================================================
+# ENVIRONMENT & CONFIGURATION
+# ============================================================================
+
+# Python Dotenv - Environment Variable Management
+# Version: 1.0.1
+# Purpose: Load environment variables from .env file
+# Usage: Keep sensitive config (DB credentials, secrets) out of version control
+# Docs: https://github.com/theskumar/python-dotenv
+python-dotenv==1.0.1
+
+
+# ============================================================================
+# OPTIONAL: RECOMMENDED ADDITIONS
+# ============================================================================
+#
+# For production deployment, consider adding:
+#
+# gunicorn==21.2.0
+#   - Production WSGI server for Django
+#   - Usage: gunicorn malar_site.wsgi
+#
+# python-decouple==3.8
+#   - Secure environment config management
+#
+# reportlab==4.0.7
+#   - Generate PDF reports (for inventory exports)
+#   - Uncomment in views.py to enable PDF downloads
+#
+# celery==5.3.0
+#   - Async task queue for background jobs
+#   - For bulk imports, scheduled reports
+#
+# django-rest-framework==3.14.0
+#   - Build REST API endpoints for mobile apps
+#
+# redis==5.0.0
+#   - Cache and session management
+#
+# ============================================================================
+

@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+{% load crispy_forms_tags %}
+
+{% block title %}{% if form.instance.pk %}Edit{% else %}Create{% endif %} Product{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row mb-4">
+        <div class="col-md-8 mx-auto">
+            <h1 class="mb-3">
+                {% if form.instance.pk %}
+                    ✏️ Edit Product
+                {% else %}
+                    ➕ Add New Product
+                {% endif %}
+            </h1>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-8 mx-auto">
+            <div class="card shadow-sm">
+                <div class="card-body p-4">
+                    <form method="post" enctype="multipart/form-data">
+                        {% csrf_token %}
+                        {{ form|crispy }}
+                        
+                        <div class="mt-4">
+                            <button type="submit" class="btn btn-primary btn-lg">
+                                {% if form.instance.pk %}
+                                    💾 Update Product
+                                {% else %}
+                                    ✔️ Create Product
+                                {% endif %}
+                            </button>
+                            <a href="{% url 'product-list' %}" class="btn btn-outline-secondary btn-lg">
+                                Cancel
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Help Section -->
+            <div class="card mt-4 bg-light">
+                <div class="card-body">
+                    <h5 class="card-title">💡 Tips</h5>
+                    <ul class="mb-0">
+                        <li><strong>Name:</strong> Product display name (e.g., "Samsung Galaxy S21")</li>
+                        <li><strong>SKU:</strong> Unique identifier (e.g., "SAMSUNG-S21-BLK"). Must be unique.</li>
+                        <li><strong>Price:</strong> Selling price in rupees</li>
+                        <li><strong>Category:</strong> Select or create a category</li>
+                        <li><strong>Images:</strong> Can be added after product creation via Admin Panel</li>
+                        <li><strong>Stock:</strong> Can be managed via Admin Panel</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Back Button -->
+            <div class="mt-4 mb-4">
+                <a href="{% url 'product-list' %}" class="btn btn-outline-secondary">← Back to Products</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

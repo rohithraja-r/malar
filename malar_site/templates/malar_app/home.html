@@ -1,0 +1,218 @@
+{% extends "base.html" %}
+
+{% block title %}Home - Inventory Management System{% endblock %}
+
+{% block content %}
+<div class="container">
+    <!-- Login Button in Top Right Corner -->
+    {% if not user.is_authenticated %}
+    <div style="position: fixed; top: 80px; right: 20px; z-index: 1000;">
+        <a href="{% url 'admin:login' %}" class="btn btn-primary btn-lg shadow-lg" style="border-radius: 50px; padding: 12px 30px; font-weight: 600;">
+            🔑 Login
+        </a>
+    </div>
+    {% endif %}
+
+    <!-- Hero Section -->
+    <div class="row mb-5">
+        <div class="col-lg-8">
+            <div class="bg-gradient p-5 rounded-lg text-white" style="background: linear-gradient(135deg, #0d6efd 0%, #0a58ca 100%); min-height: 300px; display: flex; flex-direction: column; justify-content: center;">
+                <h1 class="display-4 fw-bold mb-3">Inventory Management System</h1>
+                <p class="lead mb-4">Efficiently manage your product inventory, track stock levels, and organize your warehouse</p>
+                <div>
+                    <a href="{% url 'product-list' %}" class="btn btn-light btn-lg me-3">
+                        📦 Browse Products
+                    </a>
+                    {% if user.is_staff %}
+                    <a href="{% url 'product-create' %}" class="btn btn-warning btn-lg">
+                        ➕ Add Product
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-4">
+            <div class="text-center">
+                <div style="font-size: 120px;">📊</div>
+                <h3 class="MT-3">Real-time Dashboard</h3>
+                <p class="text-muted">Track inventory metrics and analytics</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Statistics Cards -->
+    <div class="row mb-5">
+        <div class="col-md-3 mb-4">
+            <div class="card shadow-sm border-0 h-100">
+                <div class="card-body text-center">
+                    <div style="font-size: 48px; margin-bottom: 10px;">📦</div>
+                    <h3 class="text-primary fw-bold">{{ total_products }}</h3>
+                    <p class="text-muted mb-0">Active Products</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-4">
+            <div class="card shadow-sm border-0 h-100">
+                <div class="card-body text-center">
+                    <div style="font-size: 48px; margin-bottom: 10px;">📂</div>
+                    <h3 class="text-info fw-bold">{{ total_categories }}</h3>
+                    <p class="text-muted mb-0">Categories</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-4">
+            <div class="card shadow-sm border-0 h-100">
+                <div class="card-body text-center">
+                    <div style="font-size: 48px; margin-bottom: 10px;">⚠️</div>
+                    <h3 class="text-danger fw-bold">{{ low_stock_products }}</h3>
+                    <p class="text-muted mb-0">Low Stock Items</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-4">
+            <div class="card shadow-sm border-0 h-100">
+                <div class="card-body text-center">
+                    <div style="font-size: 48px; margin-bottom: 10px;">💰</div>
+                    <h3 class="text-success fw-bold">₹{{ total_inventory_value|floatformat:0 }}</h3>
+                    <p class="text-muted mb-0">Inventory Value</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Featured Products Section -->
+    {% if featured_products %}
+    <div class="row mb-5">
+        <div class="col-12 mb-4">
+            <h2 class="mb-4">
+                <span class="badge bg-info">⭐</span> Featured Products
+            </h2>
+        </div>
+
+        {% for product in featured_products %}
+        <div class="col-md-6 col-lg-4 mb-4">
+            <div class="card h-100 shadow-sm hover-shadow-lg">
+                <!-- Product Image -->
+                <div class="card-img-top bg-light d-flex align-items-center justify-content-center" style="height: 200px; overflow: hidden;">
+                    {% if product.images.all %}
+                        {% for image in product.images.all %}
+                            {% if image.is_primary or forloop.first %}
+                            <img src="{{ image.image.url }}" alt="{{ image.alt_text|default:product.name }}" class="img-fluid" style="height: 100%; object-fit: cover;">
+                            {% endif %}
+                        {% endfor %}
+                    {% else %}
+                    <div class="text-muted text-center">
+                        <div style="font-size: 48px;">📦</div>
+                    </div>
+                    {% endif %}
+                </div>
+
+                <div class="card-body">
+                    <h5 class="card-title text-truncate">{{ product.name }}</h5>
+                    <p class="card-text text-muted small mb-2">
+                        <span class="badge bg-secondary">{{ product.category.name }}</span>
+                    </p>
+
+                    {% if product.stock %}
+                    <p class="card-text mb-2">
+                        <strong>Stock:</strong> 
+                        {% if product.stock.is_low_stock %}
+                        <span class="badge bg-danger">{{ product.stock.quantity }} units</span>
+                        {% elif product.stock.quantity == 0 %}
+                        <span class="badge bg-secondary">Out of Stock</span>
+                        {% else %}
+                        <span class="badge bg-success">{{ product.stock.quantity }} units</span>
+                        {% endif %}
+                    </p>
+                    {% endif %}
+
+                    <p class="card-text">
+                        <span class="h5 text-success">₹{{ product.price }}</span>
+                    </p>
+                </div>
+
+                <div class="card-footer bg-transparent border-top">
+                    <a href="{% url 'product-detail' product.sku %}" class="btn btn-sm btn-info w-100">👁️ View Details</a>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- View All Products Button -->
+    <div class="row mb-5">
+        <div class="col-12 text-center">
+            <a href="{% url 'product-list' %}" class="btn btn-primary btn-lg">
+                View All Products →
+            </a>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Categories Section -->
+    {% if categories %}
+    <div class="row">
+        <div class="col-12 mb-4">
+            <h2 class="mb-4">
+                <span class="badge bg-warning">📂</span> Product Categories
+            </h2>
+        </div>
+
+        {% for category in categories %}
+        <div class="col-md-6 col-lg-4 mb-4">
+            <div class="card shadow-sm text-center h-100">
+                <div class="card-body py-5">
+                    <div style="font-size: 56px; margin-bottom: 15px;">📦</div>
+                    <h5 class="card-title">{{ category.name }}</h5>
+                    {% if category.description %}
+                    <p class="card-text text-muted small">{{ category.description|truncatewords:15 }}</p>
+                    {% endif %}
+                    <p class="mb-3">
+                        <span class="badge bg-primary" style="font-size: 14px;">{{ category.products.count }} Products</span>
+                    </p>
+                </div>
+                <div class="card-footer bg-transparent border-top">
+                    <a href="{% url 'product-list' %}?category={{ category.id }}" class="btn btn-sm btn-outline-primary w-100">
+                        Browse Category
+                    </a>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <!-- Quick Actions Section -->
+    <div class="row mt-5 mb-4">
+        <div class="col-12">
+            <div class="bg-light p-5 rounded">
+                <h3 class="mb-4">⚡ Quick Actions</h3>
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <a href="{% url 'product-list' %}" class="btn btn-outline-primary w-100">
+                            🔍 Browse All Products
+                        </a>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <a href="{% url 'category-list' %}" class="btn btn-outline-secondary w-100">
+                            📂 View Categories
+                        </a>
+                    </div>
+                    {% if user.is_staff %}
+                    <div class="col-md-6 mb-3">
+                        <a href="{% url 'product-create' %}" class="btn btn-outline-success w-100">
+                            ➕ Add New Product
+                        </a>
+                    </div>
+                    <div class="col-md-6">
+                        <a href="{% url 'admin:index' %}" class="btn btn-outline-warning w-100">
+                            🔧 Admin Panel
+                        </a>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
