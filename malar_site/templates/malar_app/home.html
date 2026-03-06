@@ -7,7 +7,7 @@
     <!-- Login Button in Top Right Corner -->
     {% if not user.is_authenticated %}
     <div style="position: fixed; top: 80px; right: 20px; z-index: 1000;">
-        <a href="{% url 'admin:login' %}" class="btn btn-primary btn-lg shadow-lg" style="border-radius: 50px; padding: 12px 30px; font-weight: 600;">
+        <a href="{% url 'malar_app:login' %}" class="btn btn-primary btn-lg shadow-lg" style="border-radius: 50px; padding: 12px 30px; font-weight: 600;">
             🔑 Login
         </a>
     </div>
@@ -20,11 +20,11 @@
                 <h1 class="display-4 fw-bold mb-3">Inventory Management System</h1>
                 <p class="lead mb-4">Efficiently manage your product inventory, track stock levels, and organize your warehouse</p>
                 <div>
-                    <a href="{% url 'product-list' %}" class="btn btn-light btn-lg me-3">
+                    <a href="{% url 'malar_app:product-list' %}" class="btn btn-light btn-lg me-3">
                         📦 Browse Products
                     </a>
                     {% if user.is_staff %}
-                    <a href="{% url 'product-create' %}" class="btn btn-warning btn-lg">
+                    <a href="{% url 'malar_app:product-create-custom' %}" class="btn btn-warning btn-lg">
                         ➕ Add Product
                     </a>
                     {% endif %}
@@ -34,8 +34,8 @@
         <div class="col-lg-4">
             <div class="text-center">
                 <div style="font-size: 120px;">📊</div>
-                <h3 class="MT-3">Real-time Dashboard</h3>
-                <p class="text-muted">Track inventory metrics and analytics</p>
+                <h3 class="MT-3" style="color: #212529; font-weight: 700;">Real-time Dashboard</h3>
+                <p style="color: #495057; font-size: 1rem;">Track inventory metrics and analytics</p>
             </div>
         </div>
     </div>
@@ -132,7 +132,7 @@
                 </div>
 
                 <div class="card-footer bg-transparent border-top">
-                    <a href="{% url 'product-detail' product.sku %}" class="btn btn-sm btn-info w-100">👁️ View Details</a>
+                    <a href="{% url 'malar_app:product-detail' product.sku %}" class="btn btn-sm btn-info w-100">👁️ View Details</a>
                 </div>
             </div>
         </div>
@@ -142,7 +142,7 @@
     <!-- View All Products Button -->
     <div class="row mb-5">
         <div class="col-12 text-center">
-            <a href="{% url 'product-list' %}" class="btn btn-primary btn-lg">
+            <a href="{% url 'malar_app:product-list' %}" class="btn btn-primary btn-lg">
                 View All Products →
             </a>
         </div>
@@ -172,7 +172,7 @@
                     </p>
                 </div>
                 <div class="card-footer bg-transparent border-top">
-                    <a href="{% url 'product-list' %}?category={{ category.id }}" class="btn btn-sm btn-outline-primary w-100">
+                    <a href="{% url 'malar_app:product-list' %}?category={{ category.id }}" class="btn btn-sm btn-outline-primary w-100">
                         Browse Category
                     </a>
                 </div>
@@ -189,18 +189,18 @@
                 <h3 class="mb-4">⚡ Quick Actions</h3>
                 <div class="row">
                     <div class="col-md-6 mb-3">
-                        <a href="{% url 'product-list' %}" class="btn btn-outline-primary w-100">
+                        <a href="{% url 'malar_app:product-list' %}" class="btn btn-outline-primary w-100">
                             🔍 Browse All Products
                         </a>
                     </div>
                     <div class="col-md-6 mb-3">
-                        <a href="{% url 'category-list' %}" class="btn btn-outline-secondary w-100">
+                        <a href="{% url 'malar_app:category-list' %}" class="btn btn-outline-secondary w-100">
                             📂 View Categories
                         </a>
                     </div>
                     {% if user.is_staff %}
                     <div class="col-md-6 mb-3">
-                        <a href="{% url 'product-create' %}" class="btn btn-outline-success w-100">
+                        <a href="{% url 'malar_app:product-create' %}" class="btn btn-outline-success w-100">
                             ➕ Add New Product
                         </a>
                     </div>

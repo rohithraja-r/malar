@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Category, Product, ProductImage, Stock
+from .models import Category, Product, ProductImage, Stock, StockHistory, Customer, Invoice, InvoiceLineItem
 
 # Register your models here.
 
@@ -102,3 +102,125 @@ class StockAdmin(admin.ModelAdmin):
     is_low_stock.boolean = True
     is_low_stock.short_description = 'Low Stock?'
 
+
+@admin.register(StockHistory)
+class StockHistoryAdmin(admin.ModelAdmin):
+    list_display = ['stock', 'quantity_change', 'previous_quantity', 'new_quantity', 'action', 'performed_by', 'created_at']
+    list_filter = ['action', 'created_at']
+    search_fields = ['stock__product__name', 'notes']
+    readonly_fields = ['created_at']
+    fieldsets = (
+        ('Stock Information', {
+            'fields': ('stock', 'action')
+        }),
+        ('Quantity Changes', {
+            'fields': ('previous_quantity', 'quantity_change', 'new_quantity')
+        }),
+        ('Details', {
+            'fields': ('notes', 'performed_by', 'created_at'),
+            'classes': ('collapse',)
+        }),
+    )
+
+
+class InvoiceLineItemInline(admin.TabularInline):
+    """Inline admin for invoice line items"""
+    model = InvoiceLineItem
+    extra = 1
+    fields = ['product', 'quantity', 'unit_price', 'line_total']
+    readonly_fields = ['line_total', 'created_at']
+
+
+@admin.register(Customer)
+class CustomerAdmin(admin.ModelAdmin):
+    list_display = ['name', 'email', 'phone', 'city', 'country', 'is_active', 'created_at']
+    search_fields = ['name', 'email', 'phone', 'company_name']
+    list_filter = ['is_active', 'country', 'city', 'created_at']
+    readonly_fields = ['created_at', 'updated_at']
+    fieldsets = (
+        ('Personal Information', {
+            'fields': ('name', 'email', 'phone', 'company_name')
+        }),
+        ('Address', {
+            'fields': ('address', 'city', 'state', 'postal_code', 'country')
+        }),
+        ('Business Information', {
+            'fields': ('gst_number',)
+        }),
+        ('Status', {
+            'fields': ('is_active',)
+        }),
+        ('Timestamps', {
+            'fields': ('created_at', 'updated_at'),
+            'classes': ('collapse',)
+        }),
+    )
+
+
+@admin.register(Invoice)
+class InvoiceAdmin(admin.ModelAdmin):
+    list_display = ['invoice_number', 'customer', 'total_amount', 'payment_status', 'status', 'invoice_date']
+    search_fields = ['invoice_number', 'customer__name']
+    list_filter = ['status', 'payment_status', 'invoice_date', 'customer']
+    readonly_fields = ['invoice_number', 'created_by', 'created_at', 'updated_at', 'outstanding_amount']
+    inlines = [InvoiceLineItemInline]
+    actions = ['mark_as_paid']
+    fieldsets = (
+        ('Invoice Information', {
+            'fields': ('invoice_number', 'customer', 'invoice_date', 'due_date')
+        }),
+        ('Amounts', {
+            'fields': ('subtotal', 'tax_percentage', 'tax_amount', 'total_amount')
+        }),
+        ('Payment Information', {
+            'fields': ('payment_status', 'amount_paid', 'outstanding_amount', 'payment_date', 'payment_method')
+        }),
+        ('Status & Notes', {
+            'fields': ('status', 'notes')
+        }),
+        ('Metadata', {
+            'fields': ('created_by', 'created_at', 'updated_at'),
+            'classes': ('collapse',)
+        }),
+    )
+    
+    def outstanding_amount(self, obj):
+        """Display outstanding amount"""
+        return f"${obj.get_outstanding_amount():.2f}"
+    outstanding_amount.short_description = "Outstanding Amount"
+    
+    def mark_as_paid(self, request, queryset):
+        """Admin action to mark invoices as paid"""
+        from django.utils import timezone
+        updated = queryset.update(
+            payment_status='paid',
+            payment_date=timezone.now().date(),
+            amount_paid=F('total_amount')
+        )
+        self.message_user(request, f'{updated} invoice(s) marked as paid.')
+    mark_as_paid.short_description = "Mark selected invoices as paid"
+    
+    def save_model(self, request, obj, form, change):
+        if not change:
+            obj.created_by = request.user
+        super().save_model(request, obj, form, change)
+
+
+@admin.register(InvoiceLineItem)
+class InvoiceLineItemAdmin(admin.ModelAdmin):
+    list_display = ['invoice', 'product', 'quantity', 'unit_price', 'line_total']
+    search_fields = ['invoice__invoice_number', 'product__name']
+    list_filter = ['invoice__invoice_date', 'product']
+    readonly_fields = ['line_total', 'created_at']
+    fieldsets = (
+        ('Invoice & Product', {
+            'fields': ('invoice', 'product')
+        }),
+        ('Quantity & Price', {
+            'fields': ('quantity', 'unit_price', 'line_total')
+        }),
+        ('Metadata', {
+            'fields': ('created_at',),
+            'classes': ('collapse',)
+        }),
+    )

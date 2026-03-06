@@ -1,5 +1,5 @@
 from django import forms
-from .models import Product, Stock, Category, ProductImage
+from .models import Product, Stock, Category, ProductImage, Customer, Invoice, InvoiceLineItem
 import csv
 from io import StringIO
 
@@ -92,8 +92,7 @@ class CustomProductForm(forms.ModelForm):
     images = forms.FileField(
         required=False,
         label='Product Images',
-        help_text='You can select multiple images at once',
-        widget=forms.FileInput(attrs={'accept': 'image/*'})
+        help_text='You can select multiple images',
     )
     initial_stock = forms.IntegerField(
         required=False,
@@ -124,4 +123,48 @@ class CustomProductForm(forms.ModelForm):
             'price': forms.NumberInput(attrs={'class': 'form-control', 'placeholder': '0.00'}),
             'category': forms.Select(attrs={'class': 'form-control'}),
             'is_active': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
+        }
+
+class CustomerForm(forms.ModelForm):
+    """Form for creating and editing customers"""
+    class Meta:
+        model = Customer
+        fields = ['name', 'email', 'phone', 'address', 'city', 'state', 'postal_code', 'country', 'company_name', 'gst_number', 'is_active']
+        widgets = {
+            'name': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Full Name'}),
+            'email': forms.EmailInput(attrs={'class': 'form-control', 'placeholder': 'customer@example.com'}),
+            'phone': forms.TextInput(attrs={'class': 'form-control', 'placeholder': '+91 XXXXXXXXXX'}),
+            'address': forms.Textarea(attrs={'class': 'form-control', 'rows': 3, 'placeholder': 'Street Address'}),
+            'city': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'City'}),
+            'state': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'State/Province'}),
+            'postal_code': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Postal Code'}),
+            'country': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Country'}),
+            'company_name': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Company Name (Optional)'}),
+            'gst_number': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'GST Number (Optional)'}),
+            'is_active': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
+        }
+
+
+class InvoiceForm(forms.ModelForm):
+    """Form for creating invoices"""
+    class Meta:
+        model = Invoice
+        fields = ['customer', 'due_date', 'tax_percentage', 'notes']
+        widgets = {
+            'customer': forms.Select(attrs={'class': 'form-control'}),
+            'due_date': forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}),
+            'tax_percentage': forms.NumberInput(attrs={'class': 'form-control', 'placeholder': '18', 'step': '0.01'}),
+            'notes': forms.Textarea(attrs={'class': 'form-control', 'rows': 3, 'placeholder': 'Invoice notes...'}),
+        }
+
+
+class InvoiceLineItemForm(forms.ModelForm):
+    """Form for invoice line items"""
+    class Meta:
+        model = InvoiceLineItem
+        fields = ['product', 'quantity', 'unit_price']
+        widgets = {
+            'product': forms.Select(attrs={'class': 'form-control'}),
+            'quantity': forms.NumberInput(attrs={'class': 'form-control', 'placeholder': '1', 'min': '1'}),
+            'unit_price': forms.NumberInput(attrs={'class': 'form-control', 'placeholder': '0.00'}),
         }

@@ -25,8 +25,8 @@
     <!-- Breadcrumb -->
     <nav aria-label="breadcrumb">
         <ol class="breadcrumb">
-            <li class="breadcrumb-item"><a href="{% url 'product-list' %}">Products</a></li>
-            <li class="breadcrumb-item"><a href="{% url 'product-list' %}?category={{ product.category.id }}">{{ product.category.name }}</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'malar_app:product-list' %}">Products</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'malar_app:product-list' %}?category={{ product.category.id }}">{{ product.category.name }}</a></li>
             <li class="breadcrumb-item active">{{ product.name }}</li>
         </ol>
     </nav>
@@ -97,7 +97,7 @@
                     <div class="mb-3">
                         <p class="mb-1"><strong>Category:</strong></p>
                         <span class="badge bg-info" style="font-size: 14px;">
-                            <a href="{% url 'product-list' %}?category={{ product.category.id }}" class="text-white text-decoration-none">{{ product.category.name }}</a>
+                            <a href="{% url 'malar_app:product-list' %}?category={{ product.category.id }}" class="text-white text-decoration-none">{{ product.category.name }}</a>
                         </span>
                     </div>
 
@@ -160,10 +160,10 @@
                     <!-- Action Buttons -->
                     {% if user.is_staff %}
                     <div class="d-grid gap-2">
-                        <a href="{% url 'product-update' product.sku %}" class="btn btn-warning btn-lg">
+                        <a href="{% url 'malar_app:product-update' product.sku %}" class="btn btn-warning btn-lg">
                             ✏️ Edit Product
                         </a>
-                        <a href="{% url 'product-delete' product.sku %}" class="btn btn-danger btn-lg">
+                        <a href="{% url 'malar_app:product-delete' product.sku %}" class="btn btn-danger btn-lg">
                             🗑️ Delete Product
                         </a>
                     </div>
@@ -202,7 +202,7 @@
 
     <!-- Back Button -->
     <div class="mt-4 mb-4">
-        <a href="{% url 'product-list' %}" class="btn btn-outline-secondary">← Back to Products</a>
+        <a href="{% url 'malar_app:product-list' %}" class="btn btn-outline-secondary">← Back to Products</a>
     </div>
 </div>
 {% endblock %}

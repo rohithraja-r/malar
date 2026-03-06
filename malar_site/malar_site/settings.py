@@ -31,7 +31,10 @@ SECRET_KEY = 'django-insecure-jkp8a*cdd2@9l*^($ck)x46e8i!b(6y6=m=+o@s#11+0zbf=er
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['127.0.0.1', 'localhost', '*']
+
+# CSRF Settings
+CSRF_TRUSTED_ORIGINS = ['http://127.0.0.1', 'http://localhost']
 
 
 # Application definition
@@ -82,6 +85,7 @@ WSGI_APPLICATION = 'malar_site.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/3.2/ref/settings/#databases
 '''
+# SQLite Configuration (Recommended for Development)
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
@@ -89,15 +93,17 @@ DATABASES = {
     }
 }
 '''
+# MongoDB Configuration (Requires MongoDB Server Running)
+# Uncomment below and comment SQLite above to use MongoDB
 DATABASES = {
-    'default': {
-        'ENGINE': 'djongo',
-        'NAME': 'inventory_db',
-        'CLIENT': {
-            'host': 'localhost',
-            'port': 27017,
-        }
-    }
+     'default': {
+         'ENGINE': 'djongo',
+         'NAME': 'inventory_db',
+         'CLIENT': {
+             'host': 'localhost',
+             'port': 27017,
+         }
+     }
 }
 
 CRISPY_ALLOWED_TEMPLATE_PACKS = "bootstrap5"
@@ -152,3 +158,16 @@ MEDIA_ROOT = os.path.join(BASE_DIR2, 'media')
 # https://docs.djangoproject.com/en/3.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+# ============================================================================
+# AUTHENTICATION SETTINGS
+# ============================================================================
+
+# Redirect users to login page when authentication is required
+LOGIN_URL = 'malar_app:login'
+
+# Redirect to admin dashboard after successful login
+LOGIN_REDIRECT_URL = 'admin:index'
+
+# Redirect to home after logout
+LOGOUT_REDIRECT_URL = 'malar_app:home'

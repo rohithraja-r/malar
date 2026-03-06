@@ -12,7 +12,7 @@
         </div>
         {% if user.is_staff %}
         <div class="col-md-4 text-end">
-            <a href="{% url 'product-create' %}" class="btn btn-success btn-lg">
+            <a href="{% url 'malar_app:product-create' %}" class="btn btn-success btn-lg">
                 <span>➕</span> Add New Product
             </a>
         </div>
@@ -91,11 +91,11 @@
                 </div>
 
                 <div class="card-footer bg-transparent border-top">
-                    <a href="{% url 'product-detail' product.sku %}" class="btn btn-sm btn-info w-100">👁️ View Details</a>
+                    <a href="{% url 'malar_app:product-detail' product.sku %}" class="btn btn-sm btn-info w-100">👁️ View Details</a>
                     {% if user.is_staff %}
                     <div class="btn-group w-100 mt-2" role="group">
-                        <a href="{% url 'product-update' product.sku %}" class="btn btn-sm btn-warning">✏️ Edit</a>
-                        <a href="{% url 'product-delete' product.sku %}" class="btn btn-sm btn-danger">🗑️ Delete</a>
+                        <a href="{% url 'malar_app:product-update' product.sku %}" class="btn btn-sm btn-warning">✏️ Edit</a>
+                        <a href="{% url 'malar_app:product-delete' product.sku %}" class="btn btn-sm btn-danger">🗑️ Delete</a>
                     </div>
                     {% endif %}
                 </div>
