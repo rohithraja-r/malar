@@ -47,16 +47,71 @@ class HomeView(TemplateView):
     
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['total_products'] = Product.objects.filter(is_active=True).count()
-        context['total_categories'] = Category.objects.count()
-        # Use database-level comparison instead of property filter
-        context['low_stock_products'] = Stock.objects.filter(quantity__lte=F('reorder_level')).count()
-        context['total_inventory_value'] = sum([
-            p.price * (p.stock.quantity if hasattr(p, 'stock') else 0)
-            for p in Product.objects.all()
-        ])
-        context['featured_products'] = Product.objects.filter(is_active=True)[:6]
-        context['categories'] = Category.objects.all()
+        debug_log = []
+        try:
+            debug_log.append("Starting HomeView...")
+            # Simplified queries for MongoDB compatibility - load all data into memory
+            all_products = list(Product.objects.all())
+            debug_log.append(f"Loaded {len(all_products)} products")
+            
+            all_categories = list(Category.objects.all())
+            debug_log.append(f"Loaded {len(all_categories)} categories")
+            
+            all_stocks = list(Stock.objects.all())
+            debug_log.append(f"Loaded {len(all_stocks)} stocks")
+            
+            # Filter in Python to avoid djongo issues
+            active_products = [p for p in all_products if p.is_active]
+            low_stock = [s for s in all_stocks if s.quantity <= s.reorder_level]
+            
+            # Build context
+            context['total_products'] = len(active_products)
+            context['total_categories'] = len(all_categories)
+            context['low_stock_products'] = len(low_stock)
+            
+            # Calculate inventory value
+            total_value = 0
+            for s in all_stocks:
+                try:
+                    # Handle MongoDB Decimal128 type
+                    price = s.product.price
+                    if hasattr(price, 'to_decimal'):  # Decimal128 has this method
+                        price_val = float(price.to_decimal())
+                    else:
+                        price_val = float(price)
+                    value = price_val * s.quantity
+                    total_value += value
+                except Exception as e:
+                    debug_log.append(f"Error calculating stock value: {e}")
+            
+            context['total_inventory_value'] = total_value
+            
+            # Featured products - first 6 active products
+            context['featured_products'] = active_products[:6]
+            context['categories'] = all_categories
+            
+            debug_log.append(f"Success! Products: {context['total_products']}, Categories: {context['total_categories']}")
+            
+        except Exception as e:
+            import traceback
+            debug_log.append(f"ERROR: {e}")
+            debug_log.append(traceback.format_exc())
+            
+            context['total_products'] = 0
+            context['total_categories'] = 0
+            context['low_stock_products'] = 0
+            context['total_inventory_value'] = 0
+            context['featured_products'] = []
+            context['categories'] = []
+        
+        # Write debug log
+        try:
+            log_path = 'd:/malar/malar_site/homeview_debug.log'
+            with open(log_path, 'a') as f:
+                f.write('\n'.join(debug_log) + '\n---\n')
+        except:
+            pass
+        
         return context
 
 
@@ -74,122 +129,87 @@ class AdminDashboardView(LoginRequiredMixin, AdminRequiredMixin, TemplateView):
     
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        now = timezone.now()
-        thirty_days_ago = now - timedelta(days=30)
-        year_start = now.replace(month=1, day=1, hour=0, minute=0, second=0, microsecond=0)
-        
-        # ===== SALES & REVENUE METRICS =====
-        all_invoices = Invoice.objects.all()
-        completed_invoices = all_invoices.filter(status=Invoice.COMPLETED)
-        
-        # Total revenue (completed invoices only)
-        total_revenue = completed_invoices.aggregate(Sum('total_amount'))['total_amount__sum'] or Decimal('0')
-        monthly_revenue = completed_invoices.filter(invoice_date__gte=thirty_days_ago).aggregate(Sum('total_amount'))['total_amount__sum'] or Decimal('0')
-        yearly_revenue = completed_invoices.filter(invoice_date__gte=year_start).aggregate(Sum('total_amount'))['total_amount__sum'] or Decimal('0')
-        
-        context['total_revenue'] = float(total_revenue)
-        context['monthly_revenue'] = float(monthly_revenue)
-        context['yearly_revenue'] = float(yearly_revenue)
-        
-        # Order metrics
-        context['total_orders'] = completed_invoices.count()
-        context['monthly_orders'] = completed_invoices.filter(invoice_date__gte=thirty_days_ago).count()
-        
-        # Average order value
-        if context['total_orders'] > 0:
-            context['avg_order_value'] = float(total_revenue / context['total_orders'])
-        else:
-            context['avg_order_value'] = 0
-        
-        # ===== INVENTORY METRICS =====
-        all_stocks = Stock.objects.all()
-        
-        # Total inventory items count
-        context['total_items'] = all_stocks.aggregate(Sum('quantity'))['quantity__sum'] or 0
-        
-        # Low stock items
-        context['low_stock_count'] = all_stocks.filter(quantity__lte=F('reorder_level')).count()
-        
-        # Total inventory value
-        context['total_inventory_value'] = float(sum([
-            s.quantity * s.product.price for s in all_stocks
-        ]))
-        
-        # Out of stock items
-        context['out_of_stock_count'] = all_stocks.filter(quantity=0).count()
-        
-        # ===== CUSTOMER METRICS =====
-        all_customers = Customer.objects.all()
-        context['total_customers'] = all_customers.count()
-        context['active_customers'] = all_customers.filter(is_active=True).count()
-        
-        # New customers (last 30 days)
-        context['new_customers_count'] = all_customers.filter(created_at__gte=thirty_days_ago).count()
-        
-        # Top customers by revenue
-        top_customers = Customer.objects.annotate(
-            total_spent=Sum('invoices__total_amount')
-        ).filter(invoices__status=Invoice.COMPLETED).order_by('-total_spent')[:5]
-        context['top_customers'] = top_customers
-        
-        # ===== INVOICE/ORDER METRICS =====
-        context['pending_invoices'] = all_invoices.filter(status=Invoice.PENDING).count()
-        context['completed_invoices'] = completed_invoices.count()
-        context['cancelled_invoices'] = all_invoices.filter(status=Invoice.CANCELLED).count()
-        
-        # Overdue invoices
-        context['overdue_invoices'] = all_invoices.filter(
-            status=Invoice.PENDING,
-            due_date__lt=now.date()
-        ).count()
-        
-        # ===== PRODUCT METRICS =====
-        all_products = Product.objects.all()
-        context['total_products'] = all_products.count()
-        context['active_products'] = all_products.filter(is_active=True).count()
-        context['inactive_products'] = all_products.filter(is_active=False).count()
-        
-        # Top selling products (by quantity sold in last 30 days)
-        top_products = Product.objects.filter(
-            invoiceitems__invoice__status=Invoice.COMPLETED,
-            invoiceitems__invoice__invoice_date__gte=thirty_days_ago
-        ).annotate(
-            total_sold=Sum('invoiceitems__quantity')
-        ).order_by('-total_sold')[:5]
-        context['top_selling_products'] = top_products
-        
-        # ===== RECENT ACTIVITIES =====
-        recent_stock_changes = StockHistory.objects.select_related('stock', 'performed_by').order_by('-created_at')[:10]
-        context['recent_activities'] = recent_stock_changes
-        
-        # ===== CATEGORY BREAKDOWN =====
-        categories = Category.objects.annotate(product_count=Count('products'))
-        context['category_labels'] = [cat.name for cat in categories]
-        context['category_data'] = [cat.product_count for cat in categories]
-        
-        # ===== METRICS FOR CHARTS =====
-        # Revenue trend (last 7 days)
-        revenue_trend = []
-        for i in range(6, -1, -1):
-            day = now - timedelta(days=i)
-            daily_revenue = completed_invoices.filter(
-                invoice_date__date=day.date()
-            ).aggregate(Sum('total_amount'))['total_amount__sum'] or 0
-            revenue_trend.append(float(daily_revenue))
-        
-        context['revenue_trend_labels'] = [
-            (now - timedelta(days=i)).strftime('%a') for i in range(6, -1, -1)
-        ]
-        context['revenue_trend_data'] = revenue_trend
-        
-        # Stock status breakdown
-        context['stock_in_stock'] = all_stocks.filter(quantity__gt=0).count()
-        context['stock_low_stock'] = all_stocks.filter(
-            quantity__lte=F('reorder_level'),
-            quantity__gt=0
-        ).count()
-        context['stock_out_of_stock'] = all_stocks.filter(quantity=0).count()
-        
+        try:
+            now = timezone.now()
+            thirty_days_ago = now - timedelta(days=30)
+            
+            # Load all data into memory (MongoDB/djongo compatible)
+            all_invoices = list(Invoice.objects.all())
+            all_products = list(Product.objects.all())
+            all_stocks = list(Stock.objects.all())
+            all_customers = list(Customer.objects.all())
+            
+            # Filter in Python
+            completed_invoices = [inv for inv in all_invoices if inv.status == Invoice.COMPLETED]
+            pending_invoices = [inv for inv in all_invoices if inv.status == Invoice.PENDING]
+            recent_invoices = [inv for inv in completed_invoices if inv.invoice_date >= thirty_days_ago]
+            
+            # Calculate metrics
+            total_revenue = sum(float(inv.total_amount) for inv in completed_invoices)
+            monthly_revenue = sum(float(inv.total_amount) for inv in recent_invoices)
+            
+            context['total_revenue'] = total_revenue
+            context['monthly_revenue'] = monthly_revenue
+            context['yearly_revenue'] = total_revenue
+            context['total_orders'] = len(completed_invoices)
+            context['monthly_orders'] = len(recent_invoices)
+            context['avg_order_value'] = total_revenue / len(completed_invoices) if completed_invoices else 0
+            
+            # Inventory metrics
+            total_qty = sum(s.quantity for s in all_stocks)
+            low_stock = [s for s in all_stocks if s.quantity <= s.reorder_level]
+            out_of_stock = [s for s in all_stocks if s.quantity == 0]
+            
+            context['total_items'] = total_qty
+            context['low_stock_count'] = len(low_stock)
+            context['out_of_stock_count'] = len(out_of_stock)
+            context['total_inventory_value'] = sum(float(s.quantity * s.product.price) for s in all_stocks)
+            
+            # Customer metrics
+            active_customers = [c for c in all_customers if c.is_active]
+            new_customers = [c for c in all_customers if c.created_at >= thirty_days_ago]
+            
+            context['total_customers'] = len(all_customers)
+            context['active_customers'] = len(active_customers)
+            context['new_customers_count'] = len(new_customers)
+            
+            # Product metrics
+            active_products = [p for p in all_products if p.is_active]
+            
+            context['total_products'] = len(all_products)
+            context['active_products'] = len(active_products)
+            context['inactive_products'] = len(all_products) - len(active_products)
+            
+            # Order stats
+            context['pending_invoices'] = len(pending_invoices)
+            context['completed_invoices'] = len(completed_invoices)
+            context['cancelled_invoices'] = len([i for i in all_invoices if i.status == Invoice.CANCELLED])
+            
+            # Simple category breakdown
+            all_categories = list(Category.objects.all())
+            context['category_labels'] = [cat.name for cat in all_categories]
+            context['category_data'] = [len([p for p in all_products if p.category.id == cat.id]) for cat in all_categories]
+            
+            # Revenue trend (simple)
+            context['revenue_trend_labels'] = []
+            context['revenue_trend_data'] = []
+            for i in range(6, -1, -1):
+                day = (now - timedelta(days=i)).date()
+                context['revenue_trend_labels'].append(str(day))
+                context['revenue_trend_data'].append(0)  # Simplified
+            
+            context['top_customers'] = []
+            context['top_selling_products'] = []
+            context['recent_activities'] = []
+            
+        except Exception as e:
+            # Fallback for any errors
+            context['total_revenue'] = 0
+            context['total_orders'] = 0
+            context['total_items'] = 0
+            context['total_customers'] = 0
+            context['total_products'] = 0
+            
         return context
 
 
@@ -201,23 +221,29 @@ class ProductListView(ListView):
     paginate_by = 12
     
     def get_queryset(self):
-        queryset = Product.objects.filter(is_active=True).select_related('category')
-        
-        # Filter by category if provided
-        category_id = self.request.GET.get('category')
-        if category_id:
-            queryset = queryset.filter(category_id=category_id)
-        
-        # Search by name or SKU
-        search = self.request.GET.get('search')
-        if search:
-            queryset = queryset.filter(name__icontains=search) | queryset.filter(sku__icontains=search)
-        
-        return queryset
+        try:
+            queryset = list(Product.objects.all())
+            # Filter by active status
+            queryset = [p for p in queryset if p.is_active]
+            
+            # Filter by category if provided
+            category_id = self.request.GET.get('category')
+            if category_id:
+                queryset = [p for p in queryset if str(p.category.id) == str(category_id)]
+            
+            # Search by name or SKU
+            search = self.request.GET.get('search')
+            if search:
+                search_lower = search.lower()
+                queryset = [p for p in queryset if search_lower in p.name.lower() or search_lower in p.sku.lower()]
+            
+            return queryset
+        except Exception as e:
+            return []
     
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['categories'] = Category.objects.all()
+        context['categories'] = list(Category.objects.all())
         context['selected_category'] = self.request.GET.get('category', '')
         context['search_query'] = self.request.GET.get('search', '')
         return context

@@ -84,27 +84,19 @@ WSGI_APPLICATION = 'malar_site.wsgi.application'
 
 # Database
 # https://docs.djangoproject.com/en/3.2/ref/settings/#databases
-'''
-# SQLite Configuration (Recommended for Development)
+
+# MongoDB Configuration
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'ENGINE': 'djongo',
+        'NAME': 'inventory_db',
+        'CLIENT': {
+            'host': 'localhost',
+            'port': 27017,
+        }
     }
 }
-'''
-# MongoDB Configuration (Requires MongoDB Server Running)
-# Uncomment below and comment SQLite above to use MongoDB
-DATABASES = {
-     'default': {
-         'ENGINE': 'djongo',
-         'NAME': 'inventory_db',
-         'CLIENT': {
-             'host': 'localhost',
-             'port': 27017,
-         }
-     }
-}
+
 
 CRISPY_ALLOWED_TEMPLATE_PACKS = "bootstrap5"
 CRISPY_TEMPLATE_PACK = "bootstrap5"
