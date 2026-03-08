@@ -1,0 +1,25 @@
+Starting HomeView...
+Loaded 13 products
+Loaded 5 categories
+Loaded 13 stocks
+Error calculating stock value: float() argument must be a string or a real number, not 'Decimal128'
+Error calculating stock value: float() argument must be a string or a real number, not 'Decimal128'
+Error calculating stock value: float() argument must be a string or a real number, not 'Decimal128'
+Error calculating stock value: float() argument must be a string or a real number, not 'Decimal128'
+Error calculating stock value: float() argument must be a string or a real number, not 'Decimal128'
+Error calculating stock value: float() argument must be a string or a real number, not 'Decimal128'
+Error calculating stock value: float() argument must be a string or a real number, not 'Decimal128'
+Error calculating stock value: float() argument must be a string or a real number, not 'Decimal128'
+Error calculating stock value: float() argument must be a string or a real number, not 'Decimal128'
+Error calculating stock value: float() argument must be a string or a real number, not 'Decimal128'
+Error calculating stock value: float() argument must be a string or a real number, not 'Decimal128'
+Error calculating stock value: float() argument must be a string or a real number, not 'Decimal128'
+Error calculating stock value: float() argument must be a string or a real number, not 'Decimal128'
+Success! Products: 13, Categories: 5
+---
+Starting HomeView...
+Loaded 13 products
+Loaded 5 categories
+Loaded 13 stocks
+Success! Products: 13, Categories: 5
+---
