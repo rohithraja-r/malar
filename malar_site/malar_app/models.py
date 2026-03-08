@@ -1,5 +1,6 @@
 from django.db import models
 from django.core.validators import MinValueValidator
+from decimal import Decimal
 
 # Create your models here.
 
@@ -154,17 +155,17 @@ class Invoice(models.Model):
     customer = models.ForeignKey(Customer, on_delete=models.PROTECT, related_name='invoices')
     invoice_date = models.DateTimeField(auto_now_add=True)
     due_date = models.DateField(null=True, blank=True)
-    subtotal = models.DecimalField(max_digits=15, decimal_places=2, default=0, validators=[MinValueValidator(0)])
-    tax_amount = models.DecimalField(max_digits=15, decimal_places=2, default=0, validators=[MinValueValidator(0)])
-    tax_percentage = models.DecimalField(max_digits=5, decimal_places=2, default=18, validators=[MinValueValidator(0)])
-    total_amount = models.DecimalField(max_digits=15, decimal_places=2, default=0, validators=[MinValueValidator(0)])
+    subtotal = models.DecimalField(max_digits=15, decimal_places=2, default=Decimal('0.00'), validators=[MinValueValidator(0)])
+    tax_amount = models.DecimalField(max_digits=15, decimal_places=2, default=Decimal('0.00'), validators=[MinValueValidator(0)])
+    tax_percentage = models.DecimalField(max_digits=5, decimal_places=2, default=Decimal('18.00'), validators=[MinValueValidator(0)])
+    total_amount = models.DecimalField(max_digits=15, decimal_places=2, default=Decimal('0.00'), validators=[MinValueValidator(0)])
     notes = models.TextField(blank=True)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default=PENDING)
     # Payment tracking fields
     payment_status = models.CharField(max_length=20, choices=PAYMENT_STATUS_CHOICES, default='pending')
     payment_date = models.DateField(null=True, blank=True)
     payment_method = models.CharField(max_length=20, choices=PAYMENT_METHOD_CHOICES, null=True, blank=True)
-    amount_paid = models.DecimalField(max_digits=15, decimal_places=2, default=0, validators=[MinValueValidator(0)])
+    amount_paid = models.DecimalField(max_digits=15, decimal_places=2, default=Decimal('0.00'), validators=[MinValueValidator(0)])
     created_by = models.ForeignKey('auth.User', on_delete=models.SET_NULL, null=True, related_name='created_invoices')
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -177,7 +178,7 @@ class Invoice(models.Model):
     
     def calculate_total(self):
         """Calculate total with tax"""
-        self.subtotal = sum([item.line_total for item in self.items.all()])
+        self.subtotal = sum([item.line_total for item in self.items.all()])  # type: ignore
         self.tax_amount = self.subtotal * (self.tax_percentage / 100)
         self.total_amount = self.subtotal + self.tax_amount
         return self.total_amount
@@ -185,9 +186,6 @@ class Invoice(models.Model):
     def get_outstanding_amount(self):
         """Calculate outstanding (unpaid) amount"""
         return self.total_amount - self.amount_paid
-        self.tax_amount = self.subtotal * (self.tax_percentage / 100)
-        self.total_amount = self.subtotal + self.tax_amount
-        return self.total_amount
 
 
 class InvoiceLineItem(models.Model):
@@ -196,7 +194,7 @@ class InvoiceLineItem(models.Model):
     product = models.ForeignKey(Product, on_delete=models.PROTECT)
     quantity = models.IntegerField(validators=[MinValueValidator(1)])
     unit_price = models.DecimalField(max_digits=15, decimal_places=2, validators=[MinValueValidator(0)])
-    line_total = models.DecimalField(max_digits=15, decimal_places=2, default=0, validators=[MinValueValidator(0)])
+    line_total = models.DecimalField(max_digits=15, decimal_places=2, default=Decimal('0.00'), validators=[MinValueValidator(0)])
     created_at = models.DateTimeField(auto_now_add=True)
     
     def save(self, *args, **kwargs):

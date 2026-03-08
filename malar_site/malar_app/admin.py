@@ -1,4 +1,5 @@
 from django.contrib import admin
+from django.db.models import F
 from .models import Category, Product, ProductImage, Stock, StockHistory, Customer, Invoice, InvoiceLineItem
 
 # Register your models here.
@@ -55,7 +56,7 @@ class ProductAdmin(admin.ModelAdmin):
             return obj.stock.quantity
         except:
             return 'N/A'
-    get_stock_quantity.short_description = 'Stock Quantity'
+    get_stock_quantity.short_description = 'Stock Quantity'  # type: ignore
 
 
 @admin.register(ProductImage)
@@ -99,8 +100,8 @@ class StockAdmin(admin.ModelAdmin):
     
     def is_low_stock(self, obj):
         return obj.is_low_stock
-    is_low_stock.boolean = True
-    is_low_stock.short_description = 'Low Stock?'
+    is_low_stock.boolean = True  # type: ignore
+    is_low_stock.short_description = 'Low Stock?'  # type: ignore
 
 
 @admin.register(StockHistory)
@@ -187,7 +188,7 @@ class InvoiceAdmin(admin.ModelAdmin):
     def outstanding_amount(self, obj):
         """Display outstanding amount"""
         return f"${obj.get_outstanding_amount():.2f}"
-    outstanding_amount.short_description = "Outstanding Amount"
+    outstanding_amount.short_description = "Outstanding Amount"  # type: ignore
     
     def mark_as_paid(self, request, queryset):
         """Admin action to mark invoices as paid"""
@@ -198,7 +199,7 @@ class InvoiceAdmin(admin.ModelAdmin):
             amount_paid=F('total_amount')
         )
         self.message_user(request, f'{updated} invoice(s) marked as paid.')
-    mark_as_paid.short_description = "Mark selected invoices as paid"
+    mark_as_paid.short_description = "Mark selected invoices as paid"  # type: ignore
     
     def save_model(self, request, obj, form, change):
         if not change:
